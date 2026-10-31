@@ -110,7 +110,7 @@ function render()
   state.force = noctalia.getConfig("force_delete") == true
   local task = state.openTaskId and Model.findTask(workspace, state.openTaskId)
   if task then
-    panel.render(Detail.render(task, state, actions))
+    panel.render(Detail.render(workspace, task, state, actions))
     return
   end
   state.openTaskId = nil
@@ -201,7 +201,7 @@ function actions.closeTask()
   finish(false)
 end
 
-local function openTask()
+local function currentTask()
   return Model.findTask(workspace, state.openTaskId)
 end
 
@@ -210,14 +210,14 @@ function actions.addSubtask(text)
   if title == nil then
     return
   end
-  Model.addSubtask(openTask(), Store.newId("s"), title)
+  Model.addSubtask(currentTask(), Store.newId("s"), title)
   state.detailFocus = "subtask"
   state.inputRev += 1
   finish(true)
 end
 
 function actions.editDetail(text)
-  local task = openTask()
+  local task = currentTask()
   if task ~= nil then
     Model.setDetail(task, text)
     detailDirty = true
@@ -237,17 +237,31 @@ function actions.toggleDetailMode()
   finish(false)
 end
 
+-- position is the 0-based index reported by the column select.
+function actions.moveTaskTo(position)
+  local column = workspace.columns[(tonumber(position) or -1) + 1]
+  local task = currentTask()
+  if column == nil or task == nil or column.id == task.columnId then
+    return
+  end
+  finish(Model.moveTask(workspace, task.id, column.id, nil))
+end
+
+function actions.shiftTask(delta)
+  finish(Model.shiftTask(workspace, state.openTaskId, delta))
+end
+
 function actions.setSubtaskDone(id, done)
-  finish(Model.setSubtaskDone(openTask(), id, done))
+  finish(Model.setSubtaskDone(currentTask(), id, done))
 end
 
 function actions.renameSubtask(id, text)
   local title = Model.cleanTitle(text)
-  finish(title ~= nil and Model.renameSubtask(openTask(), id, title))
+  finish(title ~= nil and Model.renameSubtask(currentTask(), id, title))
 end
 
 function actions.deleteSubtask(id)
-  finish(Model.deleteSubtask(openTask(), id))
+  finish(Model.deleteSubtask(currentTask(), id))
 end
 
 function actions.deleteTask(id)

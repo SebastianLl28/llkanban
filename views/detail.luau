@@ -82,7 +82,7 @@ end
 
 local function titleRow(task, state, actions)
   if isEditing(state, "task", task.id) then
-    return ui.row({ key = "detail-title-edit", gap = 4, align = "center" }, {
+    return ui.row({ key = "detail-title-edit", gap = 4, align = "center", flexGrow = 1 }, {
       ui.input({
         key = "edit-task-" .. task.id,
         value = task.title,
@@ -96,7 +96,7 @@ local function titleRow(task, state, actions)
     })
   end
 
-  return ui.row({ key = "detail-title", gap = 4, align = "center" }, {
+  return ui.row({ key = "detail-title", gap = 4, align = "center", flexGrow = 1 }, {
     ui.label({ text = task.title, fontSize = 16, fontWeight = "bold", color = "on_surface", flexGrow = 1 }),
     ui.button({
       glyph = "pencil",
@@ -166,14 +166,63 @@ local function descriptionColumn(task, state, actions)
   })
 end
 
-function Detail.render(task, state, actions)
-  local header = ui.row({ gap = 4, align = "center" }, {
+local function moveControls(workspace, task, actions)
+  local names = {}
+  local selected = 0
+  for i, column in ipairs(workspace.columns) do
+    names[i] = column.name
+    if column.id == task.columnId then
+      selected = i - 1
+    end
+  end
+
+  local siblings = Model.tasksIn(workspace, task.columnId)
+  local position = table.find(siblings, task)
+  local canUp = position > 1
+  local canDown = position < #siblings
+  -- Dimmed and inert rather than disabled, so the tooltip still shows.
+  return {
+    ui.select({
+      key = "detail-move",
+      options = names,
+      selectedIndex = selected,
+      width = 180,
+      onChange = actions.moveTaskTo,
+    }),
+    ui.button({
+      key = "detail-up" .. (canUp and "" or "-off"),
+      glyph = "arrow-up",
+      variant = "ghost",
+      opacity = canUp and 1 or 0.4,
+      tooltip = tr("detail.move_up"),
+      onClick = function()
+        actions.shiftTask(-1)
+      end,
+    }),
+    ui.button({
+      key = "detail-down" .. (canDown and "" or "-off"),
+      glyph = "arrow-down",
+      variant = "ghost",
+      opacity = canDown and 1 or 0.4,
+      tooltip = tr("detail.move_down"),
+      onClick = function()
+        actions.shiftTask(1)
+      end,
+    }),
+  }
+end
+
+function Detail.render(workspace, task, state, actions)
+  local headerChildren = {
     ui.button({ glyph = "chevron-left", variant = "ghost", tooltip = tr("detail.back"), onClick = actions.closeTask }),
-    ui.column({ flexGrow = 1 }, { titleRow(task, state, actions) }),
-  })
+    titleRow(task, state, actions),
+  }
+  for _, control in ipairs(moveControls(workspace, task, actions)) do
+    headerChildren[#headerChildren + 1] = control
+  end
 
   return ui.column({ key = "detail-root", flexGrow = 1, gap = 12 }, {
-    header,
+    ui.row({ gap = 4, align = "center" }, headerChildren),
     ui.row({ flexGrow = 1, gap = 16, align = "stretch" }, {
       subtasksColumn(task, state, actions),
       descriptionColumn(task, state, actions),

@@ -191,6 +191,21 @@ function Model.subtaskProgress(task)
   return left, #task.subtasks
 end
 
+-- Moves a task one slot up (-1) or down (1) inside its column.
+function Model.shiftTask(workspace, taskId, delta)
+  local task = Model.findTask(workspace, taskId)
+  if task == nil then
+    return false
+  end
+  local siblings = Model.tasksIn(workspace, task.columnId)
+  local target = table.find(siblings, task) + delta
+  if target < 1 or target > #siblings then
+    return false
+  end
+  -- moveTask reads the slot before the move, so going down skips one extra.
+  return Model.moveTask(workspace, taskId, task.columnId, delta < 0 and target or target + 1)
+end
+
 function Model.addColumn(workspace, id, name)
   workspace.columns[#workspace.columns + 1] = { id = id, name = name }
 end
