@@ -9,7 +9,7 @@ network access.
 
 | Field | Value |
 | --- | --- |
-| ID | `sebastianll/llkanban` |
+| ID | `sebastianll28/llkanban` |
 | Entries | Bar widget: `toggle`; panel: `board` |
 
 ## Requirements
@@ -25,7 +25,7 @@ Add the `toggle` widget from Noctalia's widget picker and click it to open or
 close the board. To open it from a compositor shortcut, bind:
 
 ```sh
-noctalia msg panel-toggle sebastianll/llkanban:board
+noctalia msg panel-toggle sebastianll28/llkanban:board
 ```
 
 ### Board
