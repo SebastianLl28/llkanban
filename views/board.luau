@@ -132,7 +132,7 @@ local function columnHeader(workspace, column, count, state, actions)
     }),
   }
   if #workspace.columns > 1 then
-    local empty = count == 0
+    local empty = count == 0 or state.force
     -- Not `enabled = false`: a disabled button ignores the pointer, so its
     -- tooltip would never show. It is dimmed and inert instead.
     controls[#controls + 1] = ui.button({
@@ -140,7 +140,7 @@ local function columnHeader(workspace, column, count, state, actions)
       glyph = "trash",
       variant = "ghost",
       opacity = empty and 1 or 0.4,
-      tooltip = empty and tr("board.delete_column") or tr("board.delete_column_blocked"),
+      tooltip = count > 0 and state.force and tr("board.delete_column_force") or (empty and tr("board.delete_column") or tr("board.delete_column_blocked")),
       onClick = function()
         if empty then
           actions.deleteColumn(column.id)
@@ -213,7 +213,81 @@ local function addColumnTile(state, actions)
   })
 end
 
-function Board.render(workspace, state, actions, closeButton)
+local function workspaceBar(index, workspace, state, actions)
+  local row = {}
+  for _, entry in ipairs(index.workspaces) do
+    local active = entry.id == index.active
+    row[#row + 1] = ui.button({
+      key = "ws-" .. entry.id .. (active and "-on" or ""),
+      text = entry.name,
+      variant = active and "primary" or "ghost",
+      onClick = function()
+        actions.switchWorkspace(entry.id)
+      end,
+    })
+  end
+
+  if state.editing ~= nil and state.editing.kind == "newWorkspace" then
+    row[#row + 1] = ui.input({
+      key = "new-workspace",
+      placeholder = tr("board.workspace_placeholder"),
+      focus = true,
+      width = 200,
+      onSubmit = actions.addWorkspace,
+    })
+    row[#row + 1] = cancelButton(actions)
+  else
+    row[#row + 1] = ui.button({
+      glyph = "plus",
+      variant = "ghost",
+      tooltip = tr("board.add_workspace"),
+      onClick = function()
+        actions.beginEdit("newWorkspace", "")
+      end,
+    })
+  end
+
+  row[#row + 1] = ui.spacer({ flexGrow = 1 })
+
+  if isEditing(state, "workspace", workspace.id) then
+    row[#row + 1] = ui.input({
+      key = "edit-workspace-" .. workspace.id,
+      value = workspace.name,
+      focus = true,
+      width = 200,
+      onSubmit = actions.renameWorkspace,
+    })
+    row[#row + 1] = cancelButton(actions)
+  else
+    row[#row + 1] = ui.button({
+      glyph = "pencil",
+      variant = "ghost",
+      tooltip = tr("board.rename_workspace"),
+      onClick = function()
+        actions.beginEdit("workspace", workspace.id)
+      end,
+    })
+    if #index.workspaces > 1 then
+      local empty = #workspace.tasks == 0 or state.force
+      row[#row + 1] = ui.button({
+        key = "delete-workspace-" .. workspace.id .. (empty and "" or "-blocked"),
+        glyph = "trash",
+        variant = "ghost",
+        opacity = empty and 1 or 0.4,
+        tooltip = #workspace.tasks > 0 and state.force and tr("board.delete_workspace_force") or (empty and tr("board.delete_workspace") or tr("board.delete_workspace_blocked")),
+        onClick = function()
+          if empty then
+            actions.deleteWorkspace()
+          end
+        end,
+      })
+    end
+  end
+
+  return ui.row({ align = "center", gap = 4 }, row)
+end
+
+function Board.render(index, workspace, state, actions, closeButton)
   local header = {
     ui.label({ text = tr("board.title"), fontSize = 16, fontWeight = "bold", color = "on_surface", flexGrow = 1 }),
   }
@@ -223,6 +297,7 @@ function Board.render(workspace, state, actions, closeButton)
 
   local rows = {
     ui.row({ align = "center", gap = 8 }, header),
+    workspaceBar(index, workspace, state, actions),
     -- A fresh key per submit remounts the uncontrolled input, which clears it.
     ui.input({
       key = "new-task-" .. state.inputRev,

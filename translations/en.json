@@ -12,6 +12,19 @@
     "add_column": "Add column",
     "column_placeholder": "Column name and Enter",
     "delete_column": "Delete column",
-    "delete_column_blocked": "Empty this column to delete it"
+    "delete_column_blocked": "Empty this column first, or turn on Force delete in settings",
+    "add_workspace": "Add workspace",
+    "workspace_placeholder": "Workspace name and Enter",
+    "rename_workspace": "Rename workspace",
+    "delete_workspace": "Delete workspace",
+    "delete_workspace_blocked": "Delete its tasks first, or turn on Force delete in settings",
+    "delete_column_force": "Delete column and its tasks",
+    "delete_workspace_force": "Delete workspace and all its tasks"
+  },
+  "settings": {
+    "force_delete": {
+      "label": "Force delete",
+      "description": "Delete columns and workspaces together with their tasks instead of requiring them to be empty first."
+    }
   }
 }

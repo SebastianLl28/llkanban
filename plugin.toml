@@ -8,6 +8,13 @@ icon        = "layout-kanban"
 description = "Kanban board with workspaces, custom columns, subtasks and markdown details."
 tags        = ["kanban", "tasks", "todo", "utility", "productivity", "bar"]
 
+[[setting]]
+key             = "force_delete"
+type            = "bool"
+label_key       = "settings.force_delete.label"
+description_key = "settings.force_delete.description"
+default         = false
+
 [[widget]]
 id    = "toggle"
 entry = "widget.luau"

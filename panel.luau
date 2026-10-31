@@ -4,27 +4,59 @@ local Store = require("./store.luau")
 local Board = require("./views/board.luau")
 
 local workspace = nil
+local index = nil
 local closeButton = true
-local state = { editing = nil, inputRev = 0 }
+local state = { editing = nil, inputRev = 0, force = false }
 local actions = {}
 
+local function notifyFailure()
+  noctalia.notify(noctalia.tr("board.save_failed"))
+end
+
 local function persist()
-  if not Store.save(workspace) then
-    noctalia.notify(noctalia.tr("board.save_failed"))
+  if not Store.saveWorkspace(workspace) then
+    notifyFailure()
   end
 end
 
-local function loadWorkspace()
-  local loaded = Store.load()
-  if loaded ~= nil then
-    return loaded
+local function persistIndex()
+  if not Store.saveIndex(index) then
+    notifyFailure()
   end
+end
+
+local function createWorkspace(name)
   local columnIds = { Store.newId("c"), Store.newId("c"), Store.newId("c") }
-  return Model.newWorkspace(Store.newId("ws"), "Default", columnIds)
+  return Model.newWorkspace(Store.newId("ws"), name, columnIds)
+end
+
+local function bootstrap()
+  index = Store.loadIndex()
+  workspace = nil
+  if index ~= nil then
+    while workspace == nil and index.active ~= nil do
+      workspace = Store.loadWorkspace(index.active)
+      if workspace == nil then
+        Model.removeEntry(index, index.active)
+      end
+    end
+  else
+    workspace = Store.adoptLegacy()
+    if workspace ~= nil then
+      index = Model.newIndex(workspace.id, workspace.name)
+    end
+  end
+  if workspace == nil then
+    workspace = createWorkspace("Default")
+    index = Model.newIndex(workspace.id, workspace.name)
+    persist()
+  end
+  persistIndex()
 end
 
 function render()
-  panel.render(Board.render(workspace, state, actions, closeButton))
+  state.force = noctalia.getConfig("force_delete") == true
+  panel.render(Board.render(index, workspace, state, actions, closeButton))
 end
 
 local function finish(changed)
@@ -53,7 +85,64 @@ function actions.deleteTask(id)
 end
 
 function actions.deleteColumn(id)
-  finish(Model.deleteColumn(workspace, id))
+  finish(Model.deleteColumn(workspace, id, state.force))
+end
+
+function actions.switchWorkspace(id)
+  if id == index.active then
+    return
+  end
+  local target = Store.loadWorkspace(id)
+  if target == nil then
+    notifyFailure()
+    return
+  end
+  workspace = target
+  index.active = id
+  persistIndex()
+  state.inputRev += 1
+  finish(false)
+end
+
+function actions.addWorkspace(text)
+  local name = Model.cleanTitle(text)
+  if name == nil then
+    finish(false)
+    return
+  end
+  workspace = createWorkspace(name)
+  persist()
+  Model.addEntry(index, workspace.id, workspace.name)
+  persistIndex()
+  state.inputRev += 1
+  finish(false)
+end
+
+function actions.renameWorkspace(text)
+  local name = Model.cleanTitle(text)
+  if name ~= nil then
+    workspace.name = name
+    Model.renameEntry(index, workspace.id, name)
+    persist()
+    persistIndex()
+  end
+  finish(false)
+end
+
+function actions.deleteWorkspace()
+  if (#workspace.tasks > 0 and not state.force) or #index.workspaces <= 1 then
+    return
+  end
+  local removed = workspace.id
+  Model.removeEntry(index, removed)
+  Store.deleteWorkspace(removed)
+  workspace = Store.loadWorkspace(index.active)
+  if workspace == nil then
+    bootstrap()
+  end
+  persistIndex()
+  state.inputRev += 1
+  finish(false)
 end
 
 function actions.addTask(text)
@@ -105,7 +194,7 @@ end
 
 function onOpen(_context)
   closeButton = noctalia.getSetting("shell.show_close_buttons") ~= false
-  workspace = loadWorkspace()
+  bootstrap()
   state.editing = nil
   render()
 end

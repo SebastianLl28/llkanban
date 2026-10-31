@@ -11,6 +11,38 @@ function Model.newWorkspace(id, name, columnIds)
   return { version = 1, id = id, name = name, columns = columns, tasks = {} }
 end
 
+function Model.newIndex(id, name)
+  return { version = 1, active = id, workspaces = { { id = id, name = name } } }
+end
+
+function Model.addEntry(index, id, name)
+  index.workspaces[#index.workspaces + 1] = { id = id, name = name }
+  index.active = id
+end
+
+function Model.renameEntry(index, id, name)
+  for _, entry in ipairs(index.workspaces) do
+    if entry.id == id then
+      entry.name = name
+    end
+  end
+end
+
+-- Removing the active entry activates its left neighbor, or the new first one.
+function Model.removeEntry(index, id)
+  for i, entry in ipairs(index.workspaces) do
+    if entry.id == id then
+      table.remove(index.workspaces, i)
+      if index.active == id then
+        local neighbor = index.workspaces[math.max(1, i - 1)]
+        index.active = neighbor and neighbor.id or nil
+      end
+      return true
+    end
+  end
+  return false
+end
+
 function Model.cleanTitle(text)
   local trimmed = string.gsub(text, "^%s+", "")
   trimmed = string.gsub(trimmed, "%s+$", "")
@@ -117,14 +149,22 @@ function Model.moveColumn(workspace, columnId, delta)
   return false
 end
 
--- A column with tasks cannot be deleted, and the last column always stays.
-function Model.deleteColumn(workspace, columnId)
-  if #workspace.columns <= 1 or #Model.tasksIn(workspace, columnId) > 0 then
+-- Without force, a column with tasks cannot be deleted; with it, the tasks go
+-- too. The last column always stays.
+function Model.deleteColumn(workspace, columnId, force)
+  if #workspace.columns <= 1 then
+    return false
+  end
+  local tasks = Model.tasksIn(workspace, columnId)
+  if #tasks > 0 and not force then
     return false
   end
   for i, column in ipairs(workspace.columns) do
     if column.id == columnId then
       table.remove(workspace.columns, i)
+      for _, task in ipairs(tasks) do
+        table.remove(workspace.tasks, table.find(workspace.tasks, task))
+      end
       return true
     end
   end
