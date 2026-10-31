@@ -43,6 +43,18 @@ function Model.removeEntry(index, id)
   return false
 end
 
+-- Columns are user-defined, so the last one stands in for "done".
+function Model.pendingCount(workspace)
+  local last = workspace.columns[#workspace.columns]
+  local count = 0
+  for _, task in ipairs(workspace.tasks) do
+    if last == nil or task.columnId ~= last.id then
+      count += 1
+    end
+  end
+  return count
+end
+
 function Model.cleanTitle(text)
   local trimmed = string.gsub(text, "^%s+", "")
   trimmed = string.gsub(trimmed, "%s+$", "")

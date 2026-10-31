@@ -22,7 +22,10 @@ entries use to share modules.
 ## Usage
 
 Add the `toggle` widget from Noctalia's widget picker and click it to open or
-close the board. To open it from a compositor shortcut, bind:
+close the board. Next to its icon the widget shows how many tasks are pending
+across all workspaces, meaning not in the last column of their workspace. Its
+tooltip breaks the number down per workspace, and the number hides at zero. To
+open the board from a compositor shortcut, bind:
 
 ```sh
 noctalia msg panel-toggle sebastianll28/llkanban:board

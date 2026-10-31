@@ -27,16 +27,24 @@ local others = {}
 local actions = {}
 local detailDirty = false
 local idleTicks = 0
+local saveCount = 0
 
 local function notifyFailure()
   noctalia.notify(noctalia.tr("board.save_failed"))
+end
+
+local function publishChange()
+  saveCount += 1
+  noctalia.state.set("data_rev", string.format("%d:%d", noctalia.nowMs(), saveCount))
 end
 
 local function persist()
   detailDirty = false
   if not Store.saveWorkspace(workspace) then
     notifyFailure()
+    return
   end
+  publishChange()
 end
 
 local function flushDetail()
@@ -48,7 +56,9 @@ end
 local function persistIndex()
   if not Store.saveIndex(index) then
     notifyFailure()
+    return
   end
+  publishChange()
 end
 
 local function createWorkspace(name)

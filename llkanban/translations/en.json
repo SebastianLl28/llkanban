@@ -44,6 +44,10 @@
     "progress": "%d left of %d",
     "all_done": "All done"
   },
+  "widget": {
+    "title": "Kanban",
+    "pending": "%d pending"
+  },
   "settings": {
     "force_delete": {
       "label": "Force delete",
