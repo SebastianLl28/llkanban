@@ -83,7 +83,9 @@ their tasks switches to that workspace.
 
 Deletion never asks for confirmation.
 
-## Storage and side effects
+## Notes
+
+### Storage and side effects
 
 - Data lives in the directory returned by `noctalia.pluginDataDir()`:
   `workspaces.json` holds the workspace list and the active one, and each
@@ -96,7 +98,7 @@ Deletion never asks for confirmation.
 - The plugin makes no network requests, starts no processes and runs no remote
   code.
 
-## Limitations
+### Limitations
 
 - The panel is 1000 × 480 px. Noctalia fixes panel sizes in the manifest, so it
   cannot be resized.

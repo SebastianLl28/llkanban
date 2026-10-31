@@ -6,7 +6,7 @@ author      = "sebastianll28"
 license     = "MIT"
 icon        = "layout-kanban"
 description = "Kanban board with workspaces, custom columns, subtasks and markdown details."
-tags        = ["kanban", "tasks", "todo", "utility", "productivity", "bar"]
+tags        = ["productivity", "utility", "bar", "panel"]
 
 [[setting]]
 key             = "force_delete"

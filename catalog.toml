@@ -8,4 +8,4 @@ icon        = "layout-kanban"
 description = "Kanban board with workspaces, custom columns, subtasks and markdown details."
 deprecated  = false
 plugin_api  = 22
-tags        = ["kanban", "tasks", "todo", "utility", "productivity", "bar"]
+tags        = ["productivity", "utility", "bar", "panel"]
