@@ -1,14 +1,31 @@
 --!nonstrict
 local Model = {}
 
-local DEFAULT_COLUMNS = { "To do", "In progress", "Done" }
+Model.WORKSPACE_VERSION = 2
+
+local DEFAULT_COLUMNS = {
+  { name = "To do", closed = false },
+  { name = "In progress", closed = false },
+  { name = "Done", closed = true },
+}
 
 function Model.newWorkspace(id, name, columnIds)
   local columns = {}
-  for i, columnName in ipairs(DEFAULT_COLUMNS) do
-    columns[i] = { id = columnIds[i], name = columnName }
+  for i, default in ipairs(DEFAULT_COLUMNS) do
+    columns[i] = { id = columnIds[i], name = default.name, closed = default.closed }
   end
-  return { version = 1, id = id, name = name, columns = columns, tasks = {} }
+  return { version = Model.WORKSPACE_VERSION, id = id, name = name, columns = columns, tasks = {} }
+end
+
+-- Version 1 had no closed flag; its last column played the role of "done".
+function Model.upgradeWorkspace(workspace)
+  if workspace.version ~= 1 then
+    return
+  end
+  for i, column in ipairs(workspace.columns) do
+    column.closed = i == #workspace.columns
+  end
+  workspace.version = Model.WORKSPACE_VERSION
 end
 
 function Model.newIndex(id, name)
@@ -43,12 +60,14 @@ function Model.removeEntry(index, id)
   return false
 end
 
--- Columns are user-defined, so the last one stands in for "done".
 function Model.pendingCount(workspace)
-  local last = workspace.columns[#workspace.columns]
+  local closed = {}
+  for _, column in ipairs(workspace.columns) do
+    closed[column.id] = column.closed
+  end
   local count = 0
   for _, task in ipairs(workspace.tasks) do
-    if last == nil or task.columnId ~= last.id then
+    if not closed[task.columnId] then
       count += 1
     end
   end
@@ -219,7 +238,17 @@ function Model.shiftTask(workspace, taskId, delta)
 end
 
 function Model.addColumn(workspace, id, name)
-  workspace.columns[#workspace.columns + 1] = { id = id, name = name }
+  workspace.columns[#workspace.columns + 1] = { id = id, name = name, closed = false }
+end
+
+function Model.setColumnClosed(workspace, columnId, closed)
+  for _, column in ipairs(workspace.columns) do
+    if column.id == columnId then
+      column.closed = closed
+      return true
+    end
+  end
+  return false
 end
 
 function Model.renameColumn(workspace, columnId, name)

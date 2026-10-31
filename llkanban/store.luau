@@ -1,6 +1,9 @@
 --!nonstrict
+local Model = require("./model.luau")
+
 local Store = {}
 
+local INDEX_VERSION = 1
 local INDEX_FILE = "workspaces.json"
 local LEGACY_FILE = "ws_default.json"
 local counter = 0
@@ -20,10 +23,17 @@ local function readJson(name)
     return nil
   end
   local value = noctalia.json.decode(raw)
-  if type(value) ~= "table" or value.version ~= 1 then
+  return type(value) == "table" and value or nil
+end
+
+-- Old versions are upgraded in memory and written back on the next save.
+local function readWorkspace(name)
+  local workspace = readJson(name)
+  if workspace == nil then
     return nil
   end
-  return value
+  Model.upgradeWorkspace(workspace)
+  return workspace.version == Model.WORKSPACE_VERSION and workspace or nil
 end
 
 -- Write-then-rename so a shell exit mid-save never leaves half a JSON file.
@@ -46,7 +56,8 @@ function Store.newId(prefix)
 end
 
 function Store.loadIndex()
-  return readJson(INDEX_FILE)
+  local index = readJson(INDEX_FILE)
+  return index ~= nil and index.version == INDEX_VERSION and index or nil
 end
 
 function Store.saveIndex(index)
@@ -54,7 +65,7 @@ function Store.saveIndex(index)
 end
 
 function Store.loadWorkspace(id)
-  return readJson(id .. ".json")
+  return readWorkspace(id .. ".json")
 end
 
 function Store.saveWorkspace(workspace)
@@ -68,7 +79,7 @@ end
 
 -- Before workspaces existed, the single board lived in ws_default.json.
 function Store.adoptLegacy()
-  local workspace = readJson(LEGACY_FILE)
+  local workspace = readWorkspace(LEGACY_FILE)
   if workspace ~= nil and Store.saveWorkspace(workspace) then
     noctalia.removeFile(filePath(LEGACY_FILE))
     return workspace

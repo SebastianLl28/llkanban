@@ -367,6 +367,13 @@ function actions.renameColumn(id, text)
   finish(name ~= nil and Model.renameColumn(workspace, id, name))
 end
 
+function actions.setColumnClosed(id, closed)
+  if Model.setColumnClosed(workspace, id, closed) then
+    persist()
+  end
+  render()
+end
+
 function actions.moveColumn(id, delta)
   if Model.moveColumn(workspace, id, delta) then
     persist()

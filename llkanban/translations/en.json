@@ -19,6 +19,8 @@
     "delete_workspace": "Delete workspace",
     "delete_workspace_blocked": "Delete its tasks first, or turn on Force delete in settings",
     "delete_column_force": "Delete column and its tasks",
+    "closed_column": "Closed",
+    "closed_column_hint": "Tasks here count as finished or discarded, not pending",
     "delete_workspace_force": "Delete workspace and all its tasks"
   },
   "list": {

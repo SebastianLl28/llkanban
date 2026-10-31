@@ -113,6 +113,7 @@ local function columnHeader(workspace, column, count, state, actions)
         color = "on_surface_variant",
         flexGrow = 1,
       }),
+      ui.glyph({ name = "circle-check", size = 16, color = "primary", visible = column.closed == true }),
       ui.button({
         glyph = "pencil",
         variant = "ghost",
@@ -171,6 +172,16 @@ local function columnHeader(workspace, column, count, state, actions)
       end,
     }),
     ui.row({ gap = 2, align = "center" }, controls),
+    -- ui.toggle has no tooltip prop, so the row carries the explanation.
+    ui.row({ gap = 6, align = "center", tooltip = tr("board.closed_column_hint") }, {
+      ui.label({ text = tr("board.closed_column"), color = "on_surface_variant", flexGrow = 1 }),
+      ui.toggle({
+        checked = column.closed == true,
+        onChange = function(value)
+          actions.setColumnClosed(column.id, value == "true")
+        end,
+      }),
+    }),
   }
   return ui.column({ key = "head-edit-" .. column.id, gap = 4 }, rows)
 end

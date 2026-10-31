@@ -23,9 +23,9 @@ entries use to share modules.
 
 Add the `toggle` widget from Noctalia's widget picker and click it to open or
 close the board. Next to its icon the widget shows how many tasks are pending
-across all workspaces, meaning not in the last column of their workspace. Its
-tooltip breaks the number down per workspace, and the number hides at zero. To
-open the board from a compositor shortcut, bind:
+across all workspaces, meaning not in a closed column. Its tooltip breaks the
+number down per workspace, and the number hides at zero. To open the board
+from a compositor shortcut, bind:
 
 ```sh
 noctalia msg panel-toggle sebastianll28/llkanban:board
@@ -43,6 +43,10 @@ noctalia msg panel-toggle sebastianll28/llkanban:board
   column with the **+** tile after the last one; the pencil in a column header
   renames it, moves it left or right, or deletes it. The last column cannot be
   deleted.
+- Turn on **Closed** in a column's edit controls when its tasks are finished
+  or discarded (for example **Done**, **Archived** or **Discarded**). Closed
+  columns show a check icon and their tasks do not count as pending. A new
+  workspace starts with **Done** closed.
 
 ### Workspaces
 
