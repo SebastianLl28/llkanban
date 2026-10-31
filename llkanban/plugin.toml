@@ -1,6 +1,6 @@
 id          = "sebastianll28/llkanban"
 name        = "Kanban"
-version     = "0.4.0"
+version     = "0.5.0"
 plugin_api  = 38   # ui.markdown (21), relative require (22), dragSource onClick/grabCursor (38)
 author      = "sebastianll28"
 license     = "MIT"
