@@ -21,6 +21,14 @@
     "delete_column_force": "Delete column and its tasks",
     "delete_workspace_force": "Delete workspace and all its tasks"
   },
+  "list": {
+    "title": "All tasks",
+    "show": "Show task list",
+    "show_board": "Show board",
+    "search_placeholder": "Filter by title",
+    "all_workspaces": "All workspaces",
+    "empty": "No tasks found"
+  },
   "detail": {
     "back": "Back to board",
     "open": "Open task",

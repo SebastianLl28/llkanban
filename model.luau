@@ -58,6 +58,22 @@ function Model.findTask(workspace, taskId)
   return nil
 end
 
+-- Rows follow the board order: workspaces, then columns, then tasks.
+function Model.listTasks(workspaces, query)
+  local needle = string.lower(query or "")
+  local rows = {}
+  for _, workspace in ipairs(workspaces) do
+    for _, column in ipairs(workspace.columns) do
+      for _, task in ipairs(Model.tasksIn(workspace, column.id)) do
+        if needle == "" or string.find(string.lower(task.title), needle, 1, true) then
+          rows[#rows + 1] = { task = task, column = column, workspace = workspace }
+        end
+      end
+    end
+  end
+  return rows
+end
+
 function Model.hasColumn(workspace, columnId)
   for _, column in ipairs(workspace.columns) do
     if column.id == columnId then

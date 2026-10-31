@@ -3,11 +3,22 @@ local Model = require("./model.luau")
 local Store = require("./store.luau")
 local Board = require("./views/board.luau")
 local Detail = require("./views/detail.luau")
+local List = require("./views/list.luau")
 
 local workspace = nil
 local index = nil
 local closeButton = true
-local state = { editing = nil, inputRev = 0, force = false, openTaskId = nil }
+local state = {
+  editing = nil,
+  inputRev = 0,
+  force = false,
+  openTaskId = nil,
+  view = "board",
+  query = "",
+  allWorkspaces = false,
+}
+-- Workspaces other than the active one, loaded when the list needs them.
+local others = {}
 local actions = {}
 
 local function notifyFailure()
@@ -55,6 +66,32 @@ local function bootstrap()
   persistIndex()
 end
 
+local function loadOthers()
+  others = {}
+  if not state.allWorkspaces then
+    return
+  end
+  for _, entry in ipairs(index.workspaces) do
+    if entry.id ~= workspace.id then
+      others[entry.id] = Store.loadWorkspace(entry.id)
+    end
+  end
+end
+
+local function listedWorkspaces()
+  if not state.allWorkspaces then
+    return { workspace }
+  end
+  local list = {}
+  for _, entry in ipairs(index.workspaces) do
+    local listed = entry.id == workspace.id and workspace or others[entry.id]
+    if listed ~= nil then
+      list[#list + 1] = listed
+    end
+  end
+  return list
+end
+
 function render()
   state.force = noctalia.getConfig("force_delete") == true
   local task = state.openTaskId and Model.findTask(workspace, state.openTaskId)
@@ -63,6 +100,11 @@ function render()
     return
   end
   state.openTaskId = nil
+  if state.view == "list" then
+    local rows = Model.listTasks(listedWorkspaces(), state.query)
+    panel.render(List.render(rows, state, actions, closeButton))
+    return
+  end
   panel.render(Board.render(index, workspace, state, actions, closeButton))
 end
 
@@ -84,6 +126,44 @@ function actions.beginEdit(kind, id)
 end
 
 function actions.cancel()
+  finish(false)
+end
+
+function actions.showList()
+  state.view = "list"
+  loadOthers()
+  finish(false)
+end
+
+function actions.showBoard()
+  state.view = "board"
+  finish(false)
+end
+
+function actions.setQuery(text)
+  state.query = text
+  render()
+end
+
+function actions.setAllWorkspaces(value)
+  state.allWorkspaces = value == "true"
+  loadOthers()
+  render()
+end
+
+function actions.openListedTask(workspaceId, taskId)
+  if workspaceId ~= workspace.id then
+    local target = others[workspaceId] or Store.loadWorkspace(workspaceId)
+    if target == nil then
+      notifyFailure()
+      return
+    end
+    workspace = target
+    index.active = workspaceId
+    persistIndex()
+  end
+  state.openTaskId = taskId
+  state.inputRev += 1
   finish(false)
 end
 
@@ -243,5 +323,8 @@ function onOpen(_context)
   bootstrap()
   state.editing = nil
   state.openTaskId = nil
+  state.view = "board"
+  state.query = ""
+  state.allWorkspaces = false
   render()
 end
