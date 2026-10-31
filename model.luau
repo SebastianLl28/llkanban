@@ -11,6 +11,12 @@ function Model.newWorkspace(id, name, columnIds)
   return { version = 1, id = id, name = name, columns = columns, tasks = {} }
 end
 
+function Model.cleanTitle(text)
+  local trimmed = string.gsub(text, "^%s+", "")
+  trimmed = string.gsub(trimmed, "%s+$", "")
+  return trimmed ~= "" and trimmed or nil
+end
+
 function Model.findTask(workspace, taskId)
   for _, task in ipairs(workspace.tasks) do
     if task.id == taskId then
@@ -62,6 +68,67 @@ function Model.addTask(workspace, columnId, title, id)
   }
   workspace.tasks[#workspace.tasks + 1] = task
   return task
+end
+
+function Model.renameTask(workspace, taskId, title)
+  local task = Model.findTask(workspace, taskId)
+  if task == nil then
+    return false
+  end
+  task.title = title
+  return true
+end
+
+function Model.deleteTask(workspace, taskId)
+  local task = Model.findTask(workspace, taskId)
+  if task == nil then
+    return false
+  end
+  table.remove(workspace.tasks, table.find(workspace.tasks, task))
+  renumber(Model.tasksIn(workspace, task.columnId))
+  return true
+end
+
+function Model.addColumn(workspace, id, name)
+  workspace.columns[#workspace.columns + 1] = { id = id, name = name }
+end
+
+function Model.renameColumn(workspace, columnId, name)
+  for _, column in ipairs(workspace.columns) do
+    if column.id == columnId then
+      column.name = name
+      return true
+    end
+  end
+  return false
+end
+
+function Model.moveColumn(workspace, columnId, delta)
+  for i, column in ipairs(workspace.columns) do
+    if column.id == columnId then
+      local j = i + delta
+      if j < 1 or j > #workspace.columns then
+        return false
+      end
+      workspace.columns[i], workspace.columns[j] = workspace.columns[j], workspace.columns[i]
+      return true
+    end
+  end
+  return false
+end
+
+-- A column with tasks cannot be deleted, and the last column always stays.
+function Model.deleteColumn(workspace, columnId)
+  if #workspace.columns <= 1 or #Model.tasksIn(workspace, columnId) > 0 then
+    return false
+  end
+  for i, column in ipairs(workspace.columns) do
+    if column.id == columnId then
+      table.remove(workspace.columns, i)
+      return true
+    end
+  end
+  return false
 end
 
 -- index is the 1-based slot in the target column as seen before the move,

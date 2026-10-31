@@ -2,6 +2,16 @@
   "board": {
     "title": "Kanban",
     "add_placeholder": "Add a task and press Enter",
-    "save_failed": "Kanban: could not save your tasks"
+    "save_failed": "Kanban: could not save your tasks",
+    "cancel": "Cancel",
+    "delete": "Delete",
+    "rename": "Rename",
+    "edit_column": "Edit column",
+    "move_left": "Move left",
+    "move_right": "Move right",
+    "add_column": "Add column",
+    "column_placeholder": "Column name and Enter",
+    "delete_column": "Delete column",
+    "delete_column_blocked": "Empty this column to delete it"
   }
 }
