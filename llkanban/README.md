@@ -96,7 +96,23 @@ that is absolute or starts with `~/` (the default is `~/llkanban-export.json`):
 | --- | --- | --- | --- |
 | `force_delete` | `bool` | `false` | Deletes columns and workspaces together with their tasks. When off, a column or workspace must be empty before it can be deleted. |
 
-Deletion never asks for confirmation.
+Deleting a task, column or workspace never asks for confirmation; only
+**Delete everything** does.
+
+### Panel position
+
+Noctalia adds its standard panel settings to the board, under **Settings →
+Plugins** (gear on the Kanban row):
+
+| Setting | Default | Description |
+| --- | --- | --- |
+| Placement | `attached` | **Attached** opens the board against the bar; **Floating** opens it detached. |
+| Position | `auto` | Where a floating board opens, such as `center` or `top_left`. An attached board only uses it to pick the end of the bar it aligns to. |
+| Open Near Click | on | Opens the board next to the bar widget that toggled it instead of at **Position**. |
+| Layer | `top` | `overlay` keeps a floating board above fullscreen windows. |
+
+To open the board at a fixed spot, set **Floating**, choose a **Position** and
+turn off **Open Near Click**.
 
 ## Notes
 
