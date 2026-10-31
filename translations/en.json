@@ -1,1 +1,7 @@
-{}
+{
+  "board": {
+    "title": "Kanban",
+    "add_placeholder": "Add a task and press Enter",
+    "save_failed": "Kanban: could not save your tasks"
+  }
+}
