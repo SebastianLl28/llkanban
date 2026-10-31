@@ -59,7 +59,12 @@
     "error_read": "Could not read the file: %s",
     "error_format": "This is not a Kanban export file",
     "error_version": "This export was made by a newer version of the plugin",
-    "error_empty": "The file has no workspaces"
+    "error_empty": "The file has no workspaces",
+    "wipe_title": "Delete all data",
+    "wipe_hint": "Removes every workspace and task and leaves an empty Default workspace, for example before importing a backup. Export first if you may need them. Type delete to confirm.",
+    "wipe_placeholder": "Type delete",
+    "wipe": "Delete everything",
+    "wiped": "All data deleted"
   },
   "widget": {
     "title": "Kanban",

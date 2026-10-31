@@ -37,6 +37,28 @@ function TransferView.render(state, actions, closeButton)
     })
   end
 
+  local confirmed = state.wipeConfirmed
+  rows[#rows + 1] = ui.separator()
+  rows[#rows + 1] = ui.label({ text = tr("transfer.wipe_title"), fontWeight = "bold", color = "on_surface" })
+  rows[#rows + 1] = ui.label({ text = tr("transfer.wipe_hint"), color = "on_surface_variant" })
+  rows[#rows + 1] = ui.row({ align = "center", gap = 8 }, {
+    -- A fresh key after a wipe remounts the uncontrolled input, which clears it.
+    ui.input({
+      key = "wipe-confirm-" .. state.inputRev,
+      placeholder = tr("transfer.wipe_placeholder"),
+      flexGrow = 1,
+      onChange = actions.setWipeConfirm,
+    }),
+    ui.button({
+      key = "wipe" .. (confirmed and "" or "-locked"),
+      glyph = "trash",
+      text = tr("transfer.wipe"),
+      variant = "destructive",
+      enabled = confirmed,
+      onClick = actions.wipeAll,
+    }),
+  })
+
   return ui.column({ key = "transfer-root", flexGrow = 1, gap = 12 }, rows)
 end
 

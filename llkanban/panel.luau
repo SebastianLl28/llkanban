@@ -10,6 +10,7 @@ local TransferView = require("./views/transfer.luau")
 -- update() runs once per second; the description saves after this many quiet ticks.
 local AUTOSAVE_IDLE_TICKS = 2
 local DEFAULT_TRANSFER_PATH = "~/llkanban-export.json"
+local WIPE_WORD = "delete"
 
 local workspace = nil
 local index = nil
@@ -26,6 +27,7 @@ local state = {
   allWorkspaces = false,
   transferPath = DEFAULT_TRANSFER_PATH,
   transferStatus = nil,
+  wipeConfirmed = false,
 }
 -- Workspaces other than the active one, loaded when the list needs them.
 local others = {}
@@ -176,6 +178,7 @@ end
 function actions.showTransfer()
   state.view = "transfer"
   state.transferStatus = nil
+  state.wipeConfirmed = false
   finish(false)
 end
 
@@ -262,6 +265,31 @@ function actions.importData()
     return
   end
   reportTransfer(false, string.format(noctalia.tr("transfer.imported"), added, tasks))
+end
+
+function actions.setWipeConfirm(text)
+  local confirmed = string.lower(string.match(text, "^%s*(.-)%s*$")) == WIPE_WORD
+  if confirmed ~= state.wipeConfirmed then
+    state.wipeConfirmed = confirmed
+    render()
+  end
+end
+
+function actions.wipeAll()
+  if not state.wipeConfirmed then
+    return
+  end
+  for _, entry in ipairs(index.workspaces) do
+    Store.deleteWorkspace(entry.id)
+  end
+  workspace = createWorkspace("Default")
+  index = Model.newIndex(workspace.id, workspace.name)
+  others = {}
+  persist()
+  persistIndex()
+  state.wipeConfirmed = false
+  state.inputRev += 1
+  reportTransfer(false, noctalia.tr("transfer.wiped"))
 end
 
 function actions.setQuery(text)
@@ -520,5 +548,6 @@ function onOpen(_context)
   state.query = ""
   state.allWorkspaces = false
   state.transferStatus = nil
+  state.wipeConfirmed = false
   render()
 end

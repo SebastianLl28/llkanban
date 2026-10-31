@@ -85,6 +85,10 @@ that is absolute or starts with `~/` (the default is `~/llkanban-export.json`):
 - **Import** reads such a file and adds its workspaces as new ones. Existing
   workspaces are never changed; an imported workspace whose name is taken gets
   a suffix such as `(2)`. The active workspace stays the same.
+- **Delete everything**, under **Delete all data**, removes every workspace
+  and task and leaves an empty **Default** workspace, for example before
+  importing a backup so its workspaces do not land next to the current ones.
+  It stays disabled until `delete` is typed in the field next to it.
 
 ## Settings
 
