@@ -22,7 +22,7 @@ entry = "widget.luau"
 [[panel]]
 id    = "board"
 entry = "panel.luau"
-width = 760
+width = 1000
 height = 480
 placement = "attached"
 position = "auto"
