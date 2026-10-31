@@ -5,6 +5,9 @@ local Board = require("./views/board.luau")
 local Detail = require("./views/detail.luau")
 local List = require("./views/list.luau")
 
+-- update() runs once per second; the description saves after this many quiet ticks.
+local AUTOSAVE_IDLE_TICKS = 2
+
 local workspace = nil
 local index = nil
 local closeButton = true
@@ -13,6 +16,8 @@ local state = {
   inputRev = 0,
   force = false,
   openTaskId = nil,
+  detailMode = "preview",
+  detailFocus = "subtask",
   view = "board",
   query = "",
   allWorkspaces = false,
@@ -20,14 +25,23 @@ local state = {
 -- Workspaces other than the active one, loaded when the list needs them.
 local others = {}
 local actions = {}
+local detailDirty = false
+local idleTicks = 0
 
 local function notifyFailure()
   noctalia.notify(noctalia.tr("board.save_failed"))
 end
 
 local function persist()
+  detailDirty = false
   if not Store.saveWorkspace(workspace) then
     notifyFailure()
+  end
+end
+
+local function flushDetail()
+  if detailDirty then
+    persist()
   end
 end
 
@@ -151,6 +165,15 @@ function actions.setAllWorkspaces(value)
   render()
 end
 
+-- A task without a description opens straight into the editor.
+local function beginDetail(taskId)
+  local task = Model.findTask(workspace, taskId)
+  state.openTaskId = taskId
+  state.detailMode = task.detail == "" and "edit" or "preview"
+  state.detailFocus = state.detailMode == "edit" and "description" or "subtask"
+  state.inputRev += 1
+end
+
 function actions.openListedTask(workspaceId, taskId)
   if workspaceId ~= workspace.id then
     local target = others[workspaceId] or Store.loadWorkspace(workspaceId)
@@ -162,18 +185,17 @@ function actions.openListedTask(workspaceId, taskId)
     index.active = workspaceId
     persistIndex()
   end
-  state.openTaskId = taskId
-  state.inputRev += 1
+  beginDetail(taskId)
   finish(false)
 end
 
 function actions.openTask(id)
-  state.openTaskId = id
-  state.inputRev += 1
+  beginDetail(id)
   finish(false)
 end
 
 function actions.closeTask()
+  flushDetail()
   state.openTaskId = nil
   state.inputRev += 1
   finish(false)
@@ -189,8 +211,30 @@ function actions.addSubtask(text)
     return
   end
   Model.addSubtask(openTask(), Store.newId("s"), title)
+  state.detailFocus = "subtask"
   state.inputRev += 1
   finish(true)
+end
+
+function actions.editDetail(text)
+  local task = openTask()
+  if task ~= nil then
+    Model.setDetail(task, text)
+    detailDirty = true
+    idleTicks = 0
+  end
+end
+
+function actions.saveDetail(text)
+  actions.editDetail(text)
+  flushDetail()
+end
+
+function actions.toggleDetailMode()
+  flushDetail()
+  state.detailMode = state.detailMode == "edit" and "preview" or "edit"
+  state.detailFocus = state.detailMode == "edit" and "description" or "subtask"
+  finish(false)
 end
 
 function actions.setSubtaskDone(id, done)
@@ -318,11 +362,26 @@ function onTaskDropped(taskId, value)
   render()
 end
 
+function onClose()
+  flushDetail()
+end
+
+function update()
+  if not detailDirty then
+    return
+  end
+  idleTicks += 1
+  if idleTicks >= AUTOSAVE_IDLE_TICKS then
+    flushDetail()
+  end
+end
+
 function onOpen(_context)
   closeButton = noctalia.getSetting("shell.show_close_buttons") ~= false
   bootstrap()
   state.editing = nil
   state.openTaskId = nil
+  detailDirty = false
   state.view = "board"
   state.query = ""
   state.allWorkspaces = false

@@ -46,7 +46,7 @@ function List.render(rows, state, actions, closeButton)
     rowNodes[1] = ui.label({ text = tr("list.empty"), color = "on_surface_variant" })
   end
 
-  return ui.column({ flexGrow = 1, gap = 12 }, {
+  return ui.column({ key = "list-root", flexGrow = 1, gap = 12 }, {
     ui.row({ align = "center", gap = 8 }, header),
     ui.row({ align = "center", gap = 8 }, {
       -- Uncontrolled: the stable key keeps the typed text across renders.

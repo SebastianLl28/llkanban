@@ -51,6 +51,7 @@ local function taskCard(task, state, actions)
         ui.glyph({ name = "menu-2", size = 14, color = "on_surface_variant" }),
       }),
       ui.label({ text = task.title, flexGrow = 1 }),
+      ui.glyph({ name = "file-text", size = 14, color = "on_surface_variant", visible = task.detail ~= "" }),
       ui.label({ text = Detail.progressText(task) or "", color = "on_surface_variant", fontSize = 12 }),
       ui.button({
         glyph = "chevron-right",
@@ -325,7 +326,7 @@ function Board.render(index, workspace, state, actions, closeButton)
   columns[#columns + 1] = addColumnTile(state, actions)
   rows[#rows + 1] = ui.row({ gap = 12, align = "stretch", flexGrow = 1 }, columns)
 
-  return ui.column({ flexGrow = 1, gap = 12 }, rows)
+  return ui.column({ key = "board-root", flexGrow = 1, gap = 12 }, rows)
 end
 
 return Board

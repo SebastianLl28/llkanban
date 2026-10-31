@@ -33,6 +33,11 @@
     "back": "Back to board",
     "open": "Open task",
     "subtasks": "Subtasks",
+    "description": "Description",
+    "description_placeholder": "Write markdown here. Ctrl+Enter saves.",
+    "description_empty": "No description yet",
+    "edit": "Edit",
+    "preview": "Preview",
     "add_placeholder": "Add a subtask and press Enter",
     "progress": "%d left of %d",
     "all_done": "All done"

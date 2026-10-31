@@ -127,6 +127,10 @@ function Model.renameTask(workspace, taskId, title)
   return true
 end
 
+function Model.setDetail(task, text)
+  task.detail = text
+end
+
 function Model.deleteTask(workspace, taskId)
   local task = Model.findTask(workspace, taskId)
   if task == nil then

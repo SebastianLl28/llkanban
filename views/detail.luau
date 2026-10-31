@@ -26,7 +26,7 @@ local function cancelButton(actions)
   return ui.button({ glyph = "close", variant = "ghost", tooltip = tr("board.cancel"), onClick = actions.cancel })
 end
 
-local function subtaskRow(task, subtask, state, actions)
+local function subtaskRow(subtask, state, actions)
   if isEditing(state, "subtask", subtask.id) then
     return ui.row({ key = "subtask-" .. subtask.id .. "-edit", gap = 4, align = "center" }, {
       ui.input({
@@ -109,32 +109,75 @@ local function titleRow(task, state, actions)
   })
 end
 
+local function subtasksColumn(task, state, actions)
+  local rows = {}
+  for _, subtask in ipairs(task.subtasks) do
+    rows[#rows + 1] = subtaskRow(subtask, state, actions)
+  end
+
+  return ui.column({ flexGrow = 1, gap = 12 }, {
+    ui.row({ align = "center", gap = 8 }, {
+      ui.label({ text = tr("detail.subtasks"), fontWeight = "bold", color = "on_surface_variant", flexGrow = 1 }),
+      ui.label({ text = Detail.progressText(task) or "", color = "on_surface_variant" }),
+    }),
+    -- A fresh key per submit remounts the uncontrolled input, which clears it.
+    ui.input({
+      key = "new-subtask-" .. state.inputRev,
+      placeholder = tr("detail.add_placeholder"),
+      focus = state.editing == nil and state.detailFocus == "subtask",
+      onSubmit = actions.addSubtask,
+    }),
+    ui.scroll({ flexGrow = 1, gap = 4 }, rows),
+  })
+end
+
+local function descriptionColumn(task, state, actions)
+  local editing = state.detailMode == "edit"
+  local body
+  if editing then
+    body = ui.input({
+      key = "detail-edit-" .. task.id,
+      value = task.detail,
+      multiline = true,
+      focus = state.detailFocus == "description",
+      flexGrow = 1,
+      placeholder = tr("detail.description_placeholder"),
+      onChange = actions.editDetail,
+      onSubmit = actions.saveDetail,
+    })
+  elseif task.detail == "" then
+    body = ui.label({ text = tr("detail.description_empty"), color = "on_surface_variant" })
+  else
+    body = ui.scroll({ flexGrow = 1 }, { ui.markdown({ text = task.detail }) })
+  end
+
+  return ui.column({ flexGrow = 2, gap = 12 }, {
+    ui.row({ align = "center", gap = 8 }, {
+      ui.label({ text = tr("detail.description"), fontWeight = "bold", color = "on_surface_variant", flexGrow = 1 }),
+      -- Keyed by mode so the retained button is rebuilt with the new label.
+      ui.button({
+        key = "detail-mode-" .. state.detailMode,
+        text = editing and tr("detail.preview") or tr("detail.edit"),
+        variant = "ghost",
+        onClick = actions.toggleDetailMode,
+      }),
+    }),
+    body,
+  })
+end
+
 function Detail.render(task, state, actions)
   local header = ui.row({ gap = 4, align = "center" }, {
     ui.button({ glyph = "chevron-left", variant = "ghost", tooltip = tr("detail.back"), onClick = actions.closeTask }),
     ui.column({ flexGrow = 1 }, { titleRow(task, state, actions) }),
   })
 
-  local rows = {}
-  for _, subtask in ipairs(task.subtasks) do
-    rows[#rows + 1] = subtaskRow(task, subtask, state, actions)
-  end
-
-  local progress = Detail.progressText(task)
-  return ui.column({ flexGrow = 1, gap = 12 }, {
+  return ui.column({ key = "detail-root", flexGrow = 1, gap = 12 }, {
     header,
-    ui.row({ align = "center", gap = 8 }, {
-      ui.label({ text = tr("detail.subtasks"), fontWeight = "bold", color = "on_surface_variant", flexGrow = 1 }),
-      ui.label({ text = progress or "", color = "on_surface_variant" }),
+    ui.row({ flexGrow = 1, gap = 16, align = "stretch" }, {
+      subtasksColumn(task, state, actions),
+      descriptionColumn(task, state, actions),
     }),
-    -- A fresh key per submit remounts the uncontrolled input, which clears it.
-    ui.input({
-      key = "new-subtask-" .. state.inputRev,
-      placeholder = tr("detail.add_placeholder"),
-      focus = state.editing == nil,
-      onSubmit = actions.addSubtask,
-    }),
-    ui.scroll({ flexGrow = 1, gap = 4 }, rows),
   })
 end
 
