@@ -35,7 +35,6 @@
     "back": "Back",
     "move_up": "Move up",
     "move_down": "Move down",
-    "open": "Open task",
     "subtasks": "Subtasks",
     "description": "Description",
     "description_placeholder": "Write markdown here. Ctrl+Enter saves.",

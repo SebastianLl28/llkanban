@@ -18,77 +18,43 @@ local function cancelButton(actions)
   return ui.button({ glyph = "close", variant = "ghost", tooltip = tr("board.cancel"), onClick = actions.cancel })
 end
 
-local function taskCard(task, state, actions)
-  local children
-  local tag = ""
-  if isEditing(state, "task", task.id) then
-    tag = "-edit"
-    children = {
-      ui.input({
-        key = "edit-task-" .. task.id,
-        value = task.title,
-        focus = true,
-        flexGrow = 1,
-        onSubmit = function(text)
-          actions.renameTask(task.id, text)
-        end,
-      }),
-      cancelButton(actions),
-    }
-  else
-    children = {
-      ui.dragSource({
-        key = "grip-" .. task.id,
-        dragType = DRAG_TYPE,
-        payload = task.id,
-        previewAncestor = 1,
-        liftFromLayout = true,
-        width = 24,
-        height = 24,
-        align = "center",
-        justify = "center",
-      }, {
-        ui.glyph({ name = "menu-2", size = 14, color = "on_surface_variant" }),
-      }),
-      ui.label({ text = task.title, flexGrow = 1 }),
-      ui.glyph({ name = "file-text", size = 14, color = "on_surface_variant", visible = task.detail ~= "" }),
-      ui.label({ text = Detail.progressText(task) or "", color = "on_surface_variant", fontSize = 12 }),
-      ui.button({
-        glyph = "chevron-right",
-        variant = "ghost",
-        tooltip = tr("detail.open"),
-        onClick = function()
-          actions.openTask(task.id)
-        end,
-      }),
-      ui.button({
-        glyph = "pencil",
-        variant = "ghost",
-        tooltip = tr("board.rename"),
-        onClick = function()
-          actions.beginEdit("task", task.id)
-        end,
-      }),
-    }
-    children[#children + 1] = ui.button({
-      glyph = "trash",
-      variant = "ghost",
-      tooltip = tr("board.delete"),
-      onClick = function()
-        actions.deleteTask(task.id)
-      end,
-    })
+local function taskMeta(task)
+  local progress = Detail.progressText(task)
+  local children = {}
+  if task.detail ~= "" then
+    children[#children + 1] = ui.glyph({ name = "file-text", size = 14, color = "on_surface_variant" })
   end
+  if progress ~= nil then
+    children[#children + 1] = ui.label({ text = progress, color = "on_surface_variant", fontSize = 12 })
+  end
+  if #children == 0 then
+    return nil
+  end
+  return ui.row({ gap = 6, align = "center" }, children)
+end
 
-  -- Retained buttons keep their glyph, so the row is rebuilt when its mode flips.
-  return ui.row({
-    key = "task-" .. task.id .. tag,
-    gap = 4,
-    align = "center",
-    padding = 6,
-    fill = "surface_container/0.4",
-    radius = 10,
-  }, children)
+-- The drag source fills the card, so a press anywhere drags it and a short click opens it.
+-- A row is the outer node because the column stretches rows to its width.
+local function taskCard(task, actions)
+  return ui.row({ key = "task-" .. task.id, fill = "surface_container/0.4", radius = 10 }, {
+    ui.dragSource({
+      key = "drag-" .. task.id,
+      dragType = DRAG_TYPE,
+      payload = task.id,
+      previewAncestor = 1,
+      liftFromLayout = true,
+      grabCursor = false,
+      flexGrow = 1,
+      onClick = function()
+        actions.openTask(task.id)
+      end,
+    }, {
+      ui.column({ gap = 6, padding = 10 }, {
+        ui.label({ text = task.title, maxLines = 3 }),
+        taskMeta(task),
+      }),
+    }),
+  })
 end
 
 local function insertionZone(column, slot)
@@ -191,7 +157,7 @@ local function columnView(workspace, column, state, actions)
   local cards = {}
   for i, task in ipairs(tasks) do
     cards[#cards + 1] = insertionZone(column, i)
-    cards[#cards + 1] = taskCard(task, state, actions)
+    cards[#cards + 1] = taskCard(task, actions)
   end
   cards[#cards + 1] = insertionZone(column, #tasks + 1)
 

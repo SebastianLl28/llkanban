@@ -274,8 +274,11 @@ function actions.deleteSubtask(id)
   finish(Model.deleteSubtask(currentTask(), id))
 end
 
-function actions.deleteTask(id)
-  finish(Model.deleteTask(workspace, id))
+function actions.deleteOpenTask()
+  local deleted = Model.deleteTask(workspace, state.openTaskId)
+  state.openTaskId = nil
+  state.inputRev += 1
+  finish(deleted)
 end
 
 function actions.deleteColumn(id)

@@ -15,9 +15,8 @@ network access.
 ## Requirements
 
 No external programs, accounts, network access or compositor-specific features
-are required. The plugin needs Noctalia plugin API 22: drag and drop, markdown
-and multiline input are older, and API 22 adds the relative `require` that the
-entries use to share modules.
+are required. The plugin needs Noctalia plugin API 38 (Noctalia v5.4.0 or
+later), which lets a whole card be dragged and still open on a click.
 
 ## Usage
 
@@ -35,10 +34,10 @@ noctalia msg panel-toggle sebastianll28/llkanban:board
 
 - Type a title in the top field and press **Enter** to add a task to the first
   column.
-- Drag a card by its grip to another column, or between two cards to reorder
-  it.
-- Use the card buttons to open, rename or delete a task. A card shows how many
-  subtasks are left and an icon when the task has a description.
+- Click a card to open the task. Drag it to another column, or between two
+  cards to reorder it.
+- A card shows the title on up to three lines, how many subtasks are left and
+  an icon when the task has a description.
 - Each workspace starts with **To do**, **In progress** and **Done**. Add a
   column with the **+** tile after the last one; the pencil in a column header
   renames it, moves it left or right, or deletes it. The last column cannot be
@@ -58,6 +57,7 @@ The last workspace cannot be deleted.
 
 Opening a task replaces the board with its detail:
 
+- **Title**: the pencil next to it renames the task and the trash deletes it.
 - **Move**: a column selector and up/down buttons move or reorder the task
   without dragging.
 - **Subtasks**: add them with **Enter**, mark them done with the switch, rename

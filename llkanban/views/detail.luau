@@ -106,6 +106,12 @@ local function titleRow(task, state, actions)
         actions.beginEdit("task", task.id)
       end,
     }),
+    ui.button({
+      glyph = "trash",
+      variant = "ghost",
+      tooltip = tr("board.delete"),
+      onClick = actions.deleteOpenTask,
+    }),
   })
 end
 
