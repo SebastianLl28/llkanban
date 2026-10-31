@@ -1,0 +1,1 @@
+-- Stub: the board UI is not implemented yet.

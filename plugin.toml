@@ -1,0 +1,21 @@
+id          = "sebastianll/llkanban"
+name        = "Kanban"
+version     = "0.1.0"
+plugin_api  = 22   # ui.dragSource/dropZone (5), ui.markdown (21), relative require (22)
+author      = "sebastianll"
+license     = "MIT"
+icon        = "layout-kanban"
+description = "Kanban board with workspaces, custom columns, subtasks and markdown details."
+tags        = ["kanban", "tasks", "todo", "utility", "productivity", "bar"]
+
+[[widget]]
+id    = "toggle"
+entry = "widget.luau"
+
+[[panel]]
+id    = "board"
+entry = "panel.luau"
+width = 900
+height = "fill"
+placement = "floating"
+position = "center"
