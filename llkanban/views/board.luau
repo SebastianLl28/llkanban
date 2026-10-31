@@ -280,6 +280,12 @@ function Board.render(index, workspace, state, actions, closeButton)
     ui.label({ text = tr("board.title"), fontSize = 16, fontWeight = "bold", color = "on_surface", flexGrow = 1 }),
   }
   header[#header + 1] = ui.button({ glyph = "list", variant = "ghost", tooltip = tr("list.show"), onClick = actions.showList })
+  header[#header + 1] = ui.button({
+    glyph = "database",
+    variant = "ghost",
+    tooltip = tr("transfer.show"),
+    onClick = actions.showTransfer,
+  })
   if closeButton then
     header[#header + 1] = ui.button({ glyph = "close", variant = "ghost", onClick = actions.close })
   end

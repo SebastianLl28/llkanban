@@ -75,6 +75,17 @@ board order, with its column and subtask progress. Type to filter by title.
 Turn on **All workspaces** to include the other workspaces; opening one of
 their tasks switches to that workspace.
 
+### Import and export
+
+The database button in the header opens **Import and export**. Type a path
+that is absolute or starts with `~/` (the default is `~/llkanban-export.json`):
+
+- **Export** writes every workspace, with its columns, tasks, subtasks and
+  descriptions, to that JSON file. An existing file at that path is replaced.
+- **Import** reads such a file and adds its workspaces as new ones. Existing
+  workspaces are never changed; an imported workspace whose name is taken gets
+  a suffix such as `(2)`. The active workspace stays the same.
+
 ## Settings
 
 | Setting | Type | Default | Description |
@@ -95,6 +106,9 @@ Deletion never asks for confirmation.
   closing the shell during a save never leaves a half-written file.
 - Data from versions before workspaces existed (`ws_default.json`) is adopted
   as the first workspace and the old file is removed.
+- Outside that directory the plugin only touches the path typed in **Import
+  and export**, and only when **Export** (writes it) or **Import** (reads it)
+  is pressed.
 - The plugin makes no network requests, starts no processes and runs no remote
   code.
 

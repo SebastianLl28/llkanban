@@ -45,6 +45,22 @@
     "progress": "%d left of %d",
     "all_done": "All done"
   },
+  "transfer": {
+    "title": "Import and export",
+    "show": "Import and export",
+    "hint": "Export writes every workspace to one JSON file. Import adds the workspaces of such a file as new ones and never changes the existing ones.",
+    "path_placeholder": "~/llkanban-export.json",
+    "export": "Export",
+    "import": "Import",
+    "exported": "Exported %d workspaces to %s",
+    "imported": "Imported %d workspaces with %d tasks",
+    "error_path": "Use an absolute path or one starting with ~/",
+    "error_write": "Could not write the file: %s",
+    "error_read": "Could not read the file: %s",
+    "error_format": "This is not a Kanban export file",
+    "error_version": "This export was made by a newer version of the plugin",
+    "error_empty": "The file has no workspaces"
+  },
   "widget": {
     "title": "Kanban",
     "pending": "%d pending"

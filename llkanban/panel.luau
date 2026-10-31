@@ -4,9 +4,12 @@ local Store = require("./store.luau")
 local Board = require("./views/board.luau")
 local Detail = require("./views/detail.luau")
 local List = require("./views/list.luau")
+local Transfer = require("./transfer.luau")
+local TransferView = require("./views/transfer.luau")
 
 -- update() runs once per second; the description saves after this many quiet ticks.
 local AUTOSAVE_IDLE_TICKS = 2
+local DEFAULT_TRANSFER_PATH = "~/llkanban-export.json"
 
 local workspace = nil
 local index = nil
@@ -21,6 +24,8 @@ local state = {
   view = "board",
   query = "",
   allWorkspaces = false,
+  transferPath = DEFAULT_TRANSFER_PATH,
+  transferStatus = nil,
 }
 -- Workspaces other than the active one, loaded when the list needs them.
 local others = {}
@@ -129,6 +134,10 @@ function render()
     panel.render(List.render(rows, state, actions, closeButton))
     return
   end
+  if state.view == "transfer" then
+    panel.render(TransferView.render(state, actions, closeButton))
+    return
+  end
   panel.render(Board.render(index, workspace, state, actions, closeButton))
 end
 
@@ -162,6 +171,97 @@ end
 function actions.showBoard()
   state.view = "board"
   finish(false)
+end
+
+function actions.showTransfer()
+  state.view = "transfer"
+  state.transferStatus = nil
+  finish(false)
+end
+
+function actions.setTransferPath(text)
+  state.transferPath = text
+end
+
+local function reportTransfer(failed, text)
+  state.transferStatus = { failed = failed, text = text }
+  render()
+end
+
+-- Relative paths would resolve against the plugin directory, so only absolute and ~/ paths are accepted.
+local function transferPath()
+  local path = string.match(state.transferPath, "^%s*(.-)%s*$")
+  if string.sub(path, 1, 1) ~= "/" and string.sub(path, 1, 2) ~= "~/" then
+    reportTransfer(true, noctalia.tr("transfer.error_path"))
+    return nil
+  end
+  return noctalia.expandPath(path)
+end
+
+function actions.exportData()
+  local path = transferPath()
+  if path == nil then
+    return
+  end
+  local all = {}
+  for _, entry in ipairs(index.workspaces) do
+    local listed = entry.id == workspace.id and workspace or Store.loadWorkspace(entry.id)
+    if listed ~= nil then
+      all[#all + 1] = listed
+    end
+  end
+  local encoded = Transfer.encode(all)
+  local ok, err = false, nil
+  if encoded ~= nil then
+    ok, err = noctalia.writeFile(path, encoded)
+  end
+  if not ok then
+    reportTransfer(true, string.format(noctalia.tr("transfer.error_write"), err or path))
+    return
+  end
+  reportTransfer(false, string.format(noctalia.tr("transfer.exported"), #all, path))
+end
+
+function actions.importData()
+  local path = transferPath()
+  if path == nil then
+    return
+  end
+  local raw, err = noctalia.readFile(path)
+  if raw == nil then
+    reportTransfer(true, string.format(noctalia.tr("transfer.error_read"), err or path))
+    return
+  end
+  local imported, reason = Transfer.decode(raw)
+  if imported == nil then
+    reportTransfer(true, noctalia.tr(reason))
+    return
+  end
+
+  local takenNames = {}
+  for _, entry in ipairs(index.workspaces) do
+    takenNames[entry.name] = true
+  end
+  local active = index.active
+  local added, tasks = 0, 0
+  for _, source in ipairs(imported) do
+    local adopted = Transfer.adopt(source, Store.newId, takenNames)
+    if not Store.saveWorkspace(adopted) then
+      break
+    end
+    Model.addEntry(index, adopted.id, adopted.name)
+    added += 1
+    tasks += #adopted.tasks
+  end
+  index.active = active
+  if added > 0 then
+    persistIndex()
+  end
+  if added < #imported then
+    reportTransfer(true, noctalia.tr("board.save_failed"))
+    return
+  end
+  reportTransfer(false, string.format(noctalia.tr("transfer.imported"), added, tasks))
 end
 
 function actions.setQuery(text)
@@ -419,5 +519,6 @@ function onOpen(_context)
   state.view = "board"
   state.query = ""
   state.allWorkspaces = false
+  state.transferStatus = nil
   render()
 end
