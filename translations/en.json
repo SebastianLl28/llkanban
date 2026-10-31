@@ -21,6 +21,14 @@
     "delete_column_force": "Delete column and its tasks",
     "delete_workspace_force": "Delete workspace and all its tasks"
   },
+  "detail": {
+    "back": "Back to board",
+    "open": "Open task",
+    "subtasks": "Subtasks",
+    "add_placeholder": "Add a subtask and press Enter",
+    "progress": "%d left of %d",
+    "all_done": "All done"
+  },
   "settings": {
     "force_delete": {
       "label": "Force delete",

@@ -121,6 +121,56 @@ function Model.deleteTask(workspace, taskId)
   return true
 end
 
+local function findSubtask(task, subtaskId)
+  for i, subtask in ipairs(task.subtasks) do
+    if subtask.id == subtaskId then
+      return subtask, i
+    end
+  end
+  return nil
+end
+
+function Model.addSubtask(task, id, title)
+  task.subtasks[#task.subtasks + 1] = { id = id, title = title, done = false }
+end
+
+function Model.renameSubtask(task, subtaskId, title)
+  local subtask = findSubtask(task, subtaskId)
+  if subtask == nil then
+    return false
+  end
+  subtask.title = title
+  return true
+end
+
+function Model.setSubtaskDone(task, subtaskId, done)
+  local subtask = findSubtask(task, subtaskId)
+  if subtask == nil then
+    return false
+  end
+  subtask.done = done
+  return true
+end
+
+function Model.deleteSubtask(task, subtaskId)
+  local _, i = findSubtask(task, subtaskId)
+  if i == nil then
+    return false
+  end
+  table.remove(task.subtasks, i)
+  return true
+end
+
+function Model.subtaskProgress(task)
+  local left = 0
+  for _, subtask in ipairs(task.subtasks) do
+    if not subtask.done then
+      left += 1
+    end
+  end
+  return left, #task.subtasks
+end
+
 function Model.addColumn(workspace, id, name)
   workspace.columns[#workspace.columns + 1] = { id = id, name = name }
 end

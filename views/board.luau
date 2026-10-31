@@ -1,5 +1,6 @@
 --!nonstrict
 local Model = require("../model.luau")
+local Detail = require("./detail.luau")
 
 local Board = {}
 
@@ -50,6 +51,15 @@ local function taskCard(task, state, actions)
         ui.glyph({ name = "menu-2", size = 14, color = "on_surface_variant" }),
       }),
       ui.label({ text = task.title, flexGrow = 1 }),
+      ui.label({ text = Detail.progressText(task) or "", color = "on_surface_variant", fontSize = 12 }),
+      ui.button({
+        glyph = "chevron-right",
+        variant = "ghost",
+        tooltip = tr("detail.open"),
+        onClick = function()
+          actions.openTask(task.id)
+        end,
+      }),
       ui.button({
         glyph = "pencil",
         variant = "ghost",

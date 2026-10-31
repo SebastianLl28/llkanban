@@ -2,11 +2,12 @@
 local Model = require("./model.luau")
 local Store = require("./store.luau")
 local Board = require("./views/board.luau")
+local Detail = require("./views/detail.luau")
 
 local workspace = nil
 local index = nil
 local closeButton = true
-local state = { editing = nil, inputRev = 0, force = false }
+local state = { editing = nil, inputRev = 0, force = false, openTaskId = nil }
 local actions = {}
 
 local function notifyFailure()
@@ -56,6 +57,12 @@ end
 
 function render()
   state.force = noctalia.getConfig("force_delete") == true
+  local task = state.openTaskId and Model.findTask(workspace, state.openTaskId)
+  if task then
+    panel.render(Detail.render(task, state, actions))
+    return
+  end
+  state.openTaskId = nil
   panel.render(Board.render(index, workspace, state, actions, closeButton))
 end
 
@@ -78,6 +85,45 @@ end
 
 function actions.cancel()
   finish(false)
+end
+
+function actions.openTask(id)
+  state.openTaskId = id
+  state.inputRev += 1
+  finish(false)
+end
+
+function actions.closeTask()
+  state.openTaskId = nil
+  state.inputRev += 1
+  finish(false)
+end
+
+local function openTask()
+  return Model.findTask(workspace, state.openTaskId)
+end
+
+function actions.addSubtask(text)
+  local title = Model.cleanTitle(text)
+  if title == nil then
+    return
+  end
+  Model.addSubtask(openTask(), Store.newId("s"), title)
+  state.inputRev += 1
+  finish(true)
+end
+
+function actions.setSubtaskDone(id, done)
+  finish(Model.setSubtaskDone(openTask(), id, done))
+end
+
+function actions.renameSubtask(id, text)
+  local title = Model.cleanTitle(text)
+  finish(title ~= nil and Model.renameSubtask(openTask(), id, title))
+end
+
+function actions.deleteSubtask(id)
+  finish(Model.deleteSubtask(openTask(), id))
 end
 
 function actions.deleteTask(id)
@@ -196,5 +242,6 @@ function onOpen(_context)
   closeButton = noctalia.getSetting("shell.show_close_buttons") ~= false
   bootstrap()
   state.editing = nil
+  state.openTaskId = nil
   render()
 end
