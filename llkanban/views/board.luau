@@ -33,9 +33,25 @@ local function taskMeta(task)
   return ui.row({ gap = 6, align = "center" }, children)
 end
 
+-- Labels wrap only with a maxWidth, and the host exposes no panel size to derive it from.
+local PANEL_WIDTH = 1000 -- keep in sync with [[panel]] width in plugin.toml
+local PANEL_PADDING = 14
+local COLUMN_GAP = 12
+local ADD_TILE_WIDTH = 40
+local COLUMN_PADDING = 8
+local SCROLLBAR_GUTTER = 14
+local CARD_PADDING = 10
+local TITLE_MAX_LINES = 2
+
+local function cardTextWidth(columnCount)
+  local available = PANEL_WIDTH - 2 * PANEL_PADDING - ADD_TILE_WIDTH - COLUMN_GAP * columnCount
+  local columnWidth = available / math.max(columnCount, 1)
+  return math.max(60, math.floor(columnWidth - 2 * COLUMN_PADDING - SCROLLBAR_GUTTER - 2 * CARD_PADDING))
+end
+
 -- The drag source fills the card, so a press anywhere drags it and a short click opens it.
 -- A row is the outer node because the column stretches rows to its width.
-local function taskCard(task, actions)
+local function taskCard(task, actions, textWidth)
   return ui.row({ key = "task-" .. task.id, fill = "surface_container/0.4", radius = 10 }, {
     ui.dragSource({
       key = "drag-" .. task.id,
@@ -50,7 +66,7 @@ local function taskCard(task, actions)
       end,
     }, {
       ui.column({ gap = 6, padding = 10 }, {
-        ui.label({ text = task.title, maxLines = 3 }),
+        ui.label({ text = task.title, maxWidth = textWidth, maxLines = TITLE_MAX_LINES }),
         taskMeta(task),
       }),
     }),
@@ -154,10 +170,11 @@ end
 
 local function columnView(workspace, column, state, actions)
   local tasks = Model.tasksIn(workspace, column.id)
+  local textWidth = cardTextWidth(#workspace.columns)
   local cards = {}
   for i, task in ipairs(tasks) do
     cards[#cards + 1] = insertionZone(column, i)
-    cards[#cards + 1] = taskCard(task, actions)
+    cards[#cards + 1] = taskCard(task, actions, textWidth)
   end
   cards[#cards + 1] = insertionZone(column, #tasks + 1)
 
